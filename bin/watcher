@@ -3,16 +3,16 @@ set -e
 
 worker=$(basename $0)
 script_dir=$(dirname $(readlink -f $0))
-src_dir=$(dirname $(dirname $(dirname $script_dir)))
 
-echo "SOURCE DIR = $src_dir, script_dir = $script_dir"
+src_dir=$PWD
+echo "Start watching from source dir $src_dir"
 
-rc_dir = $src_dir/.dev-tools.rc
-export IGNORE_FILE=$rc_dir/ignored.txt
+env_dir=$src_dir/.dev-tools.rc
+export IGNORE_FILE=$env_dir/ignored.txt
 if [[ "$worker" =~ deploy ]]; then
-  env_file=$rc_dir/deploy.sh
+  env_file=$env_dir/deploy.sh
 else
-  env_file=$rc_dir/devel.sh
+  env_file=$env_dir/devel.sh
 fi
 
 if [ -f $env_file ]; then
