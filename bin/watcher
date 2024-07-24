@@ -1,0 +1,86 @@
+#!/bin/bash
+set -e
+
+worker=$(basename $0)
+script_dir=$(dirname $(readlink -f $0))
+src_dir=$(dirname $(dirname $(dirname $script_dir)))
+
+echo "SOURCE DIR = $src_dir, script_dir = $script_dir"
+
+rc_dir = $src_dir/.dev-tools.rc
+export IGNORE_FILE=$rc_dir/ignored.txt
+if [[ "$worker" =~ deploy ]]; then
+  env_file=$rc_dir/deploy.sh
+else
+  env_file=$rc_dir/devel.sh
+fi
+
+if [ -f $env_file ]; then
+  source $env_file
+else
+  echo Warning: could not find resources file. Will use default settings
+fi
+
+
+if [ "$UI_BUILD_PATH" = "" ]; then
+  export UI_BUILD_PATH=$HOME/build/ui
+fi
+mkdir -p "$UI_BUILD_PATH"
+
+if [ "$UI_SRC_PATH" = "" ]; then
+  export UI_SRC_PATH=$src_dir
+fi
+
+proc_tag=$(echo $UI_SRC_PATH/$worker | sed -e "s/\//-/g" | sed -E "s/^\-|\-$|\.sh//g" )
+if [ "$TMPDIR" = "" ]; then
+  pidfile=/tmp/${proc_tag}.pid
+  pidcheck=/tmp/${proc_tag}.check
+else
+  pidfile=$TMPDIR${proc_tag}.pid
+  pidcheck=$TMPDIR${proc_tag}.check
+fi
+
+echo Using pidfile=$pidfile
+
+if [ -f $pidfile ]; then
+  pid=$(cat $pidfile)
+  ps -p $pid | grep $pid | sed -E "s/^ *//" | sed -E "s/ .*$//" > $pidcheck
+  plist=$(cat $pidcheck)
+  echo "PLIST=$plist // $pid"
+  if [ "$plist" = "$pid" ]; then
+    echo there is already a watcher with $pid
+    exit 1
+  fi 
+fi 
+
+if [ -f $pidfile ]; then
+  rm "$pidfile"
+fi
+
+echo $$ > $pidfile
+
+echo "Start watching from $UI_SRC_PATH"
+if [ -z $UI_BUILD_MODE ]; then
+  export UI_BUILD_MODE=development
+fi
+
+if [ "$UI_BUILD_MODE" = "development" ]; then
+  watch="--watch"
+fi
+
+cd $UI_SRC_PATH/svg 
+grunt make
+
+cd $UI_SRC_PATH
+echo "Copy sprites to local [$UI_SRC_PATH] bb-templates/svg/ ---> bb-templates/svg/ "
+for l in normalized.sprite raw.sprite
+do 
+  mv bb-templates/svg/$l.svg bb-templates/svg/$l.txt
+  if [ $STRIP_SVG_COMMENT != "" ]; then
+    sed -i "s/<\!\-\- .+ \-\-\>//g" bb-templates/svg/$l.txt
+    sed -i "s/\t+/ /g" bb-templates/svg/$l.txt
+  fi
+done 
+
+$UI_SRC_PATH/webpack/seeds/index.js
+webpack --config webpack.js --mode=$UI_BUILD_MODE --progress $watch

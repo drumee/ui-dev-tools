@@ -1,0 +1,26 @@
+{
+  "name": "@drumee/drumee-ui-dev-tools",
+  "version": "1.0.0",
+  "description": "Developer tools for Drumee User Interface",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:somanos/drumee-ui-dev-tools.git"
+  },
+  "keywords": [
+    "Drumee",
+    "User",
+    "Interface",
+    "Developer",
+    "Tools"
+  ],
+  "author": "Somanos Sar <somanos@drumee.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/somanos/drumee-ui-dev-tools/issues"
+  },
+  "homepage": "https://github.com/somanos/drumee-ui-dev-tools#readme"
+}
