@@ -76,7 +76,7 @@ echo "Copy sprites to local [$UI_SRC_PATH] bb-templates/svg/ ---> bb-templates/s
 for l in normalized.sprite raw.sprite
 do 
   mv bb-templates/svg/$l.svg bb-templates/svg/$l.txt
-  if [ $STRIP_SVG_COMMENT != "" ]; then
+  if [ "$STRIP_SVG_COMMENT" != "" ]; then
     sed -i "s/<\!\-\- .+ \-\-\>//g" bb-templates/svg/$l.txt
     sed -i "s/\t+/ /g" bb-templates/svg/$l.txt
   fi
