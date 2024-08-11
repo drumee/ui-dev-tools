@@ -1,4 +1,4 @@
-# drumee-ui-dev-tools
+# @drumee/ui-dev-tools
 Drumee User Interface Development Helper
 ```console
 npm i --save-dev @drumee/ui-dev-tools
