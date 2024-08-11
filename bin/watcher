@@ -3,16 +3,16 @@ set -e
 
 worker=$(basename $0)
 script_dir=$(dirname $(readlink -f $0))
+src_dir=$(dirname $(dirname $(dirname $(dirname $script_dir))))
 
-src_dir=$PWD
-echo "Start watching from source dir $src_dir"
+echo "SOURCE DIR = $src_dir, script_dir = $script_dir"
 
-env_dir=$src_dir/.dev-tools.rc
-export IGNORE_FILE=$env_dir/ignored.txt
+rc_dir=$src_dir/.dev-tools.rc
+export IGNORE_FILE=$rc_dir/ignored.txt
 if [[ "$worker" =~ deploy ]]; then
-  env_file=$env_dir/deploy.sh
+  env_file=$rc_dir/deploy.sh
 else
-  env_file=$env_dir/devel.sh
+  env_file=$rc_dir/devel.sh
 fi
 
 if [ -f $env_file ]; then
@@ -67,20 +67,14 @@ fi
 if [ "$UI_BUILD_MODE" = "development" ]; then
   watch="--watch"
 fi
+  env_file=$rc_dir/deploy.sh
 
-cd $UI_SRC_PATH/svg 
-grunt make
-
-cd $UI_SRC_PATH
-echo "Copy sprites to local [$UI_SRC_PATH] bb-templates/svg/ ---> bb-templates/svg/ "
-for l in normalized.sprite raw.sprite
-do 
-  mv bb-templates/svg/$l.svg bb-templates/svg/$l.txt
-  if [ $STRIP_SVG_COMMENT != "" ]; then
-    sed -i "s/<\!\-\- .+ \-\-\>//g" bb-templates/svg/$l.txt
-    sed -i "s/\t+/ /g" bb-templates/svg/$l.txt
-  fi
-done 
+if [ -d $rc_dir/prepare ]; then
+  for l in $(ls); do
+    if [ -x $l ]; then
+    $l
+  done
+fi 
 
 $UI_SRC_PATH/webpack/seeds/index.js
 webpack --config webpack.js --mode=$UI_BUILD_MODE --progress $watch
