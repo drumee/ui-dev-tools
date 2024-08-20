@@ -6,6 +6,8 @@ src_dir=$(dirname $module_dir)
 cd $module_dir/.bin
 ln -sf ../@drumee/ui-dev-tools/bin/watcher ./drumee-ui-devel
 ln -sf ../@drumee/ui-dev-tools/bin/watcher ./drumee-ui-deploy
+ln -sf ../@drumee/ui-dev-tools/widget/index.js ./drumee-make-widget
+ln -sf ../@drumee/ui-dev-tools/seeds/index.js ./drumee-build-seeds
 ln -sf ../@drumee/ui-dev-tools/bin/build-jitsi ./drumee-build-jitsi
 if [ ! -d $src_dir/.dev-tools.rc ]; then
   cp -r $base_dir/.dev-tools.rc $src_dir/
