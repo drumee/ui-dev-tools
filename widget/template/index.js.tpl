@@ -1,13 +1,13 @@
 /* ==================================================================== *
-* Widget automatically generated  
+* Widget automatically generated on <%= date %>
 * npm run make-widget -- 
 * ==================================================================== */
 
 class __<%= group %>_<%= name %> extends <%= parent %>{
 
-  constructor(...args) {
-    super(...args);
-  }
+  //constructor(...args) {
+  //  super(...args);
+  //}
 
 
   /**

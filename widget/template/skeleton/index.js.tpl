@@ -1,5 +1,5 @@
 /* ==================================================================== *
-* Widget skeleton automatically generated  
+* Widget skeleton automatically generated on <%= date %>
 * npm run make-widget -- 
 * ==================================================================== */
 

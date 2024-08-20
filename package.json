@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/somanos/drumee-ui-dev-tools/issues"
   },
-  "homepage": "https://github.com/somanos/drumee-ui-dev-tools#readme"
+  "homepage": "https://github.com/somanos/drumee-ui-dev-tools#readme",
+  "dependencies": {
+    "minimist": "^1.2.8"
+  }
 }

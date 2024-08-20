@@ -1,5 +1,5 @@
 /* ==================================================================== *
-* Widget style automatically generated  
+* Widget style automatically generated on <%= date %>
 * npm run make-widget -- 
 * ==================================================================== */
 @import 'mixins/drumee';
