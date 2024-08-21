@@ -72,7 +72,8 @@ fi
 if [ -d $rc_dir/prepare ]; then
   for l in $(ls); do
     if [ -x $l ]; then
-    $l
+      $l
+    fi
   done
 fi 
 
