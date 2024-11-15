@@ -13,11 +13,15 @@ const RECURVISE = { recursive: true };
 const { camelCase, template } = require('lodash');
 const Minimist = require('minimist');
 const { basename, resolve, dirname, join } = require('path');
-const { exit, argv } = process;
+const { exit, argv, env } = process;
 const ARGV = Minimist(argv.slice(2));
 const prog_name = basename(argv[1]);
-let dest_dir;
+const tpl_base = new RegExp(`^${__dirname}/template/`)
 
+/**
+ * 
+ * @param {*} a 
+ */
 function fatal(a) {
   console.log(`[Fatal error]: ${a}`);
   exit(1);
@@ -32,13 +36,18 @@ function usage(a) {
   exit(1);
 }
 
-function render(filename) {
-  const tpl_file = resolve(__dirname, 'template', filename);
-  let dest_file = resolve(dest_dir, filename);
-  dest_file = dest_file.replace(/\.tpl/, '');
+function render(target, tpl_file) {
+  if(!/\.tpl$/.test(tpl_file)){
+    return
+  }
+
   if (!existsSync(tpl_file)) {
     fatal(`[Template not found]: ${tpl_file}`);
   }
+
+  let filename = tpl_file.replace(tpl_base, '').replace(/\.tpl$/, '')
+  console.log({filename, __dirname}, tpl_file);
+  let dest_file = resolve(target, filename);
   let fig = ARGV.fig.split(/[.-_\/]/);
   let group = fig.shift();
   let name = camelCase(fig.join('_'));
@@ -65,54 +74,50 @@ function render(filename) {
 }
 
 // -----------------------------------------------------------------
-function check_sanity(cb) {
+function targetDir() {
   let target;
   ARGV.fig || usage('fig');
   ARGV.dest || usage('dest');
   if (/^\//.test(ARGV.dest)) {
     target = ARGV.dest;
   } else {
-    target = resolve(process.env.PWD, ARGV.dest)
+    target = resolve(env.PWD, ARGV.dest)
   }
-  let base_dir;
-  if (!ARGV.name) {
-    ARGV.name = basename(target);
-    base_dir = dirname(target);
-  } else {
-    base_dir = target;
+
+  if (existsSync(target)) {
+    fatal(`Destination ${target} already exist!`);
+    return
   }
-  dest_dir = resolve(base_dir, ARGV.name);
-  if (!existsSync(base_dir)) {
-    mkdirSync(dest_dir, RECURVISE);
-  }
-  if (existsSync(dest_dir)) {
-    fatal(`Destination ${dest_dir} already exist!`);
-  } else {
-    mkdirSync(dest_dir, RECURVISE);
-  }
+  mkdirSync(target, RECURVISE);
+  return target
 }
 
-function build(e) {
-  const folders = [];
-  folders.push(resolve(__dirname, 'template'));
-  folders.push(resolve(__dirname, 'template', 'skeleton'));
-  folders.push(resolve(__dirname, 'template', 'skin'));
+/**
+ * 
+ * @param {*} target 
+ */
+function build(target) {
+  const tpl_base = resolve(__dirname, 'template');
+  const re = new RegExp(`^${__dirname}/`)
+  const folders = [
+    tpl_base,
+    resolve(tpl_base, 'skeleton'),
+    resolve(tpl_base, 'skin')
+  ];
   for (var dir of folders) {
     readdirSync(dir).forEach(function (f) {
       let full_path = resolve(dir, f);
       let stat = statSync(full_path);
       if (stat.isDirectory()) {
-        let dest = resolve(dest_dir, f);
+        let dest = resolve(target, f);
         mkdirSync(dest, RECURVISE);
       } else if (stat.isFile()) {
-        let base = dir.replace(`${__dirname}/template`, '');
-        base = base.replace(/^\//, '');
-        render(join(base, f));
+        render(target, resolve(dir,f));
       }
     });
   }
 }
 
-check_sanity();
-build();
-console.log(`The new Drumee Widget was created and placed a ${dest_dir}`);
+const tartget = targetDir();
+build(tartget);
+console.log(`The new Drumee Widget was created and placed a ${tartget}`);
