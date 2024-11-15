@@ -8,7 +8,7 @@ const {
   statSync,
   mkdirSync
 } = require('fs');
-const RECURVISE = { recurvise: true };
+const RECURVISE = { recursive: true };
 
 const { camelCase, template } = require('lodash');
 const Minimist = require('minimist');
@@ -49,12 +49,16 @@ function render(filename) {
     family,
     filename: dest_file.replace(resolve(__dirname, '..'), ''),
     parent: ARGV.parent || 'LetcBox',
+    service: "trigger-my-service",
     date: new Date().toISOString()
   };
   let templateFile = readFileSync(tpl_file, 'utf-8');
   let content = String(templateFile).trim().toString();
   const renderer = template(content);
-  mkdirSync(dirname(dest_file), RECURVISE);
+  const dir = dirname(dest_file);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, RECURVISE);
+  }
   content = renderer(data).replace(/\#\{/g, '${');
   writeFileSync(dest_file, content, 'utf-8');
 
@@ -68,8 +72,7 @@ function check_sanity(cb) {
   if (/^\//.test(ARGV.dest)) {
     target = ARGV.dest;
   } else {
-    target = ARGV.dest.replace(/^\.(\/)*/g, '')
-    target = resolve(__dirname, '..', ARGV.dest)
+    target = resolve(process.env.PWD, ARGV.dest)
   }
   let base_dir;
   if (!ARGV.name) {
@@ -78,11 +81,10 @@ function check_sanity(cb) {
   } else {
     base_dir = target;
   }
-
-  if (!existsSync(base_dir)) {
-    fatal(`Parent ${base_dir} dir does not exists`);
-  }
   dest_dir = resolve(base_dir, ARGV.name);
+  if (!existsSync(base_dir)) {
+    mkdirSync(dest_dir, RECURVISE);
+  }
   if (existsSync(dest_dir)) {
     fatal(`Destination ${dest_dir} already exist!`);
   } else {

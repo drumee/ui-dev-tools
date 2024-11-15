@@ -1,6 +1,6 @@
 /* ==================================================================== *
 * Widget automatically generated on <%= date %>
-* npm run make-widget -- 
+* npm run add-widget -- --fig=<grpup.family> --dest=/path/to/the/widget
 * ==================================================================== */
 
 class __<%= group %>_<%= name %> extends <%= parent %>{
