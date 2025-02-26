@@ -77,5 +77,5 @@ if [ -d $rc_dir/prepare ]; then
   done
 fi 
 
-$UI_SRC_PATH/webpack/seeds/index.js
+$script_dir/../seeds/index.js
 webpack --config webpack.js --mode=$UI_BUILD_MODE --progress $watch
