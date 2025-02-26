@@ -2,24 +2,23 @@
 
 const { existsSync, readFileSync, writeFileSync } = require('fs');
 const { template, values, isString, isEmpty } = require('lodash');
-const Minimist = require('minimist');
-const Path = require('path');
-const Moment = require('moment');
+const { resolve, dirname } = require('path');
 const not_found = [];
-const argv = Minimist(process.argv.slice(2));
+const args = require("./args");
 
 let SRC_DIR;
-if (argv.from) {
-  SRC_DIR = Path.resolve(argv.from);
+if (args.from) {
+  SRC_DIR = resolve(args.from);
 } else {
   if (process.env.UI_SRC_PATH) {
-    SRC_DIR = Path.resolve(process.env.UI_SRC_PATH);
+    SRC_DIR = resolve(process.env.UI_SRC_PATH);
   } else {
     SRC_DIR = process.env.PWD || __dirname;
   }
 }
 
-const webpack = require('../resolve')(SRC_DIR);
+const webpack = require('./aliases')(SRC_DIR);
+
 let ALIASES = {};
 /**
  * 
@@ -36,7 +35,7 @@ function build_aliases() {
  * @returns 
  */
 function item(path) {
-  const tpl_file = Path.resolve(__dirname, 'promise.tpl');
+  const tpl_file = resolve(__dirname, 'promise.tpl');
   let str = readFileSync(tpl_file, 'utf-8');
   const renderer = template(String(str).trim().toString());
   return renderer({ path });
@@ -71,7 +70,7 @@ function optimize(items) {
           - Already declared in ${i.path} 
           - Shall be overloaded by ${f.path}\n`);
       } else {
-        if (argv.verbose) console.log(`${i.kind} declared multiple times`)
+        if (args.verbose) console.log(`${i.kind} declared multiple times`)
       }
     }
   }
@@ -83,19 +82,20 @@ function optimize(items) {
  * @param {*} items 
  */
 function render(items) {
-  const tpl_file = Path.resolve(__dirname, 'classes.tpl');
-  const dest_file = Path.resolve(SRC_DIR, 'core/kind/seeds/builtins.js');
+  const tpl_file = resolve(__dirname, 'classes.tpl');
+  const dest_file = resolve(SRC_DIR, 'core/kind/seeds/builtins.js');
   if (!existsSync(tpl_file)) {
     fatal(`[Template not found]: ${tpl_file}`);
   }
+  let now = new Date;
   let data = {
     items: optimize(items),
     filename: dest_file.replace(SRC_DIR, ''),
-    year: Moment().year()
+    year: now.getFullYear()
   };
 
-  let template = readFileSync(tpl_file, 'utf-8');
-  let content = String(template).trim().toString();
+  let tpl = readFileSync(tpl_file, 'utf-8');
+  let content = String(tpl).trim().toString();
   const renderer = template(content);
   writeFileSync(dest_file, renderer(data), 'utf-8');
 }
@@ -112,12 +112,12 @@ function make() {
   let libs = [
     "src/drumee",
   ];
-  if (argv.libs) {
-    libs = argv.libs.split(/[,;:]/);
+  if (args.libs) {
+    libs = args.libs.split(/[,;:]/);
   }
   const walk = require('walkdir');
   for (let dir of libs) {
-    let f = Path.resolve(SRC_DIR, dir);
+    let f = resolve(SRC_DIR, dir);
     console.log("SCANNING", f);
     let files = walk.sync(f);
 
@@ -136,7 +136,7 @@ function make() {
           if (!isString(path)) continue;
           let basedir = null;
           if (/^\./.test(path)) {
-            basedir = Path.resolve(Path.dirname(file), path);
+            basedir = resolve(dirname(file), path);
           } else {
             let [b, d] = path.split(/\/+/);
             basedir = webpack.alias[b];
@@ -145,10 +145,10 @@ function make() {
             if (ALIASES[basedir]) {
               path = v[kind];
             } else {
-              if (ALIASES[Path.dirname(file)]) {
-                path = basedir.replace(Path.dirname(file), ALIASES[Path.dirname(file)]);
+              if (ALIASES[dirname(file)]) {
+                path = basedir.replace(dirname(file), ALIASES[dirname(file)]);
               } else {
-                let r = Path.resolve(Path.dirname(file), v[kind]);
+                let r = resolve(dirname(file), v[kind]);
                 path = r.replace(SRC_DIR, '').replace(/^\//, '');
               }
             }

@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/somanos/drumee-ui-dev-tools#readme",
   "dependencies": {
-    "minimist": "^1.2.8"
+    "argparse": "^2.0.1",
+    "lodash": "^4.17.21",
+    "walkdir": "^0.4.1"
   }
 }
