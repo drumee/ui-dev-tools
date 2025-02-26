@@ -108,9 +108,8 @@ function make() {
   console.log("Compiling seeds from ....", SRC_DIR);
   build_aliases();
   let data = [];
-  let lex = [];
   let libs = [
-    "src/drumee",
+    "src",
   ];
   if (args.libs) {
     libs = args.libs.split(/[,;:]/);
