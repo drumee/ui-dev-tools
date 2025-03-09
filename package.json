@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:somanos/drumee-ui-dev-tools.git"
+    "url": "git@github.com:drumee/ui-dev-tools.git"
   },
   "keywords": [
     "Drumee",
@@ -21,9 +21,9 @@
   "author": "Somanos Sar <somanos@drumee.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/somanos/drumee-ui-dev-tools/issues"
+    "url": "https://github.com/drumee/ui-dev-tools/issues"
   },
-  "homepage": "https://github.com/somanos/drumee-ui-dev-tools#readme",
+  "homepage": "https://github.com/drumee/ui-dev-tools",
   "dependencies": {
     "argparse": "^2.0.1",
     "lodash": "^4.17.21",
