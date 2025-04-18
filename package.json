@@ -1,6 +1,6 @@
 {
   "name": "@drumee/ui-dev-tools",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Developer tools for Drumee User Interface",
   "main": "index.js",
   "scripts": {
