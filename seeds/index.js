@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 const { existsSync, readFileSync, writeFileSync } = require('fs');
+const { readFileSync: readJSON } = require('jsonfile');
 const { template, values, isString, isEmpty } = require('lodash');
-const { resolve, dirname } = require('path');
+const { resolve, join, dirname } = require('path');
 const not_found = [];
 const args = require("./args");
 
@@ -13,19 +14,25 @@ if (args.from) {
   if (process.env.UI_SRC_PATH) {
     SRC_DIR = resolve(process.env.UI_SRC_PATH);
   } else {
-    SRC_DIR = process.env.PWD || __dirname;
+    SRC_DIR = resolve(__dirname, '../../..');
   }
 }
 
-const webpack = require('./aliases')(SRC_DIR);
-
+const webpack_dir = join(SRC_DIR, 'webpack')
 let ALIASES = {};
+
 /**
  * 
  */
 function build_aliases() {
-  for (var k in webpack.alias) {
-    ALIASES[webpack.alias[k]] = k;
+  let aliases_file = join(webpack_dir, 'resolve.js');
+  if (existsSync(aliases_file)) {
+    let { alias } = require(aliases_file)(SRC_DIR);
+    for (let k in alias) {
+      if (existsSync(alias[k])) {
+        ALIASES[alias[k]] = k;
+      }
+    }
   }
 }
 
@@ -81,9 +88,9 @@ function optimize(items) {
  * 
  * @param {*} items 
  */
-function render(items) {
+function render(seeds_root, items) {
   const tpl_file = resolve(__dirname, 'classes.tpl');
-  const dest_file = resolve(SRC_DIR, 'core/kind/seeds/builtins.js');
+  const dest_file = resolve(SRC_DIR, seeds_root, 'core/kind/seeds/builtins.js');
   if (!existsSync(tpl_file)) {
     fatal(`[Template not found]: ${tpl_file}`);
   }
@@ -100,26 +107,31 @@ function render(items) {
   writeFileSync(dest_file, renderer(data), 'utf-8');
 }
 
-
+function debug(line, path) {
+  if (/modules\/desk/.test(path)) {
+    console.log(`LINE:${line}`, path)
+  }
+}
 /**
  * 
  */
 function make() {
   console.log("Compiling seeds from ....", SRC_DIR);
-  build_aliases();
-  let data = [];
   let libs = [
-    "src",
+    "src/drumee",
   ];
   if (args.libs) {
     libs = args.libs.split(/[,;:]/);
   }
+  build_aliases();
   const walk = require('walkdir');
   for (let dir of libs) {
+    let data = [];
+    let root = new RegExp('^' + join(SRC_DIR, dir));
     let f = resolve(SRC_DIR, dir);
     console.log("SCANNING", f);
     let files = walk.sync(f);
-
+    let parent;
     let v;
     for (file of files) {
       if (!/(seeds.js)$/.test(file)) continue;
@@ -133,28 +145,41 @@ function make() {
         for (let kind in v) {
           let path = v[kind];
           if (!isString(path)) continue;
-          let basedir = null;
-          if (/^\./.test(path)) {
+          let basedir = './';
+          debug(149, path)
+          if (/^\./.test(path) || (!/^\//.test(path))) {
             basedir = resolve(dirname(file), path);
-          } else {
-            let [b, d] = path.split(/\/+/);
-            basedir = webpack.alias[b];
           }
           if (basedir && existsSync(basedir)) {
             if (ALIASES[basedir]) {
-              path = v[kind];
+              path = basedir
+              debug(152, path)
             } else {
-              if (ALIASES[dirname(file)]) {
-                path = basedir.replace(dirname(file), ALIASES[dirname(file)]);
-              } else {
-                let r = resolve(dirname(file), v[kind]);
-                path = r.replace(SRC_DIR, '').replace(/^\//, '');
+              parent = ALIASES[dirname(file)]
+              if (parent) {
+                path = join(parent, v[kind]);
+              }
+              else {
+                parent = dirname(file);
+                path = resolve(parent, v[kind]);
+                path = path.replace(SRC_DIR, '').replace(/^\//, '');
               }
             }
           } else {
-            path = basedir.replace(SRC_DIR, '').replace(/^\//, '');
+            parent = dirname(basedir);
+            path = resolve(SRC_DIR, dir, v[kind]);
+            let realpath = `${path}.js`
+            if (!existsSync(path) && !existsSync(realpath)) {
+              path = parent;
+            }
+            realpath = `${path}.js`
+            if (!existsSync(path) && !existsSync(realpath)) {
+              path = v[kind];
+            }
           }
           path = path.replace(/\\+/g, '/');
+          path = path.replace(root, '');
+          path = path.replace(/^\/+/, '');
           data.push({
             kind,
             path,
@@ -165,8 +190,8 @@ function make() {
         console.log(`ERROR : ${file} not found`);
       }
     }
+    render(dir, data);
   }
-  render(data);
   if (!isEmpty(not_found)) {
     console.warn("Following files have not been resolved", not_found);
   }

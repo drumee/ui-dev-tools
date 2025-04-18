@@ -77,10 +77,12 @@ if [ -d $rc_dir/prepare ]; then
   done
 fi
 
-if [ "$SEEDS_ROOTS" != "" ]; then
-  $script_dir/../seeds/index.js --from=$UI_SRC_PATH --libs=$SEEDS_ROOTS
-else
-  $script_dir/../seeds/index.js --from=$UI_SRC_PATH 
+if [ "$BUILD_SEEDS" != "no" ]; then
+  if [ "$SEEDS_ROOTS" != "" ]; then
+    $script_dir/../seeds/index.js --from=$UI_SRC_PATH --libs=$SEEDS_ROOTS
+  else
+    $script_dir/../seeds/index.js --from=$UI_SRC_PATH 
+  fi
 fi
 
 webpack --config webpack.js --mode=$UI_BUILD_MODE --progress $watch
