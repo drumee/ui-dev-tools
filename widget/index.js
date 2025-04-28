@@ -11,11 +11,9 @@ const {
 const RECURVISE = { recursive: true };
 
 const { camelCase, template } = require('lodash');
-const Minimist = require('minimist');
-const { basename, resolve, dirname, join } = require('path');
-const { exit, argv, env } = process;
-const ARGV = Minimist(argv.slice(2));
-const prog_name = basename(argv[1]);
+const { resolve, dirname } = require('path');
+const { exit, env } = process;
+const args = require("./args")
 const tpl_base = new RegExp(`^${__dirname}/template/`)
 
 /**
@@ -27,14 +25,6 @@ function fatal(a) {
   exit(1);
 }
 
-function usage(a) {
-  console.log(`Missing argument : ${a}`,)
-  console.log(`Usage ${prog_name} 
-    --fig=figGroup.figName 
-    --dest=/where/to/place/code
-    `);
-  exit(1);
-}
 
 function render(target, tpl_file) {
   if(!/\.tpl$/.test(tpl_file)){
@@ -48,7 +38,7 @@ function render(target, tpl_file) {
   let filename = tpl_file.replace(tpl_base, '').replace(/\.tpl$/, '')
   console.log({filename, __dirname}, tpl_file);
   let dest_file = resolve(target, filename);
-  let fig = ARGV.fig.split(/[.-_\/]/);
+  let fig = args.fig.split(/[.-_\/]/);
   let group = fig.shift();
   let name = camelCase(fig.join('_'));
   let family = `${group}_${name}`;
@@ -57,7 +47,7 @@ function render(target, tpl_file) {
     name,
     family,
     filename: dest_file.replace(resolve(__dirname, '..'), ''),
-    parent: ARGV.parent || 'LetcBox',
+    parent: args.parent || 'LetcBox',
     service: "trigger-my-service",
     date: new Date().toISOString()
   };
@@ -76,12 +66,10 @@ function render(target, tpl_file) {
 // -----------------------------------------------------------------
 function targetDir() {
   let target;
-  ARGV.fig || usage('fig');
-  ARGV.dest || usage('dest');
-  if (/^\//.test(ARGV.dest)) {
-    target = ARGV.dest;
+  if (/^\//.test(args.dest)) {
+    target = args.dest;
   } else {
-    target = resolve(env.PWD, ARGV.dest)
+    target = resolve(env.PWD, args.dest)
   }
 
   if (existsSync(target)) {
@@ -98,7 +86,6 @@ function targetDir() {
  */
 function build(target) {
   const tpl_base = resolve(__dirname, 'template');
-  const re = new RegExp(`^${__dirname}/`)
   const folders = [
     tpl_base,
     resolve(tpl_base, 'skeleton'),
