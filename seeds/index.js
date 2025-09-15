@@ -1,39 +1,33 @@
 #!/usr/bin/env node
 
-const { existsSync, readFileSync, writeFileSync, statSync } = require('fs');
-const { readFileSync: readJSON } = require('jsonfile');
+const { readFileSync, statSync, mkdirSync, writeFileSync, existsSync } = require('fs');
 const { template, values, isString, isEmpty } = require('lodash');
 const { resolve, join, dirname } = require('path');
+const Moment = require('moment');
 const not_found = [];
-const args = require("./args");
-const { readdir } = require("fs/promises");
+const Json2md = require('json2md');
+const args = require('./args')
+let src_base = args.app_base;
 
-let SRC_DIR;
-if (args.from) {
-  SRC_DIR = resolve(args.from);
-} else {
+let SRC_DIR = args.from || args.src_dir;
+if (!SRC_DIR) {
   if (process.env.UI_SRC_PATH) {
     SRC_DIR = resolve(process.env.UI_SRC_PATH);
   } else {
-    SRC_DIR = resolve(__dirname, '../../..');
+    SRC_DIR = process.env.PWD || __dirname;
   }
 }
 
-const webpack_dir = join(SRC_DIR, 'webpack')
+const webpack = require('../resolve')(SRC_DIR);
 let ALIASES = {};
-
+let REV_ALIASES = {};
 /**
  * 
  */
 function build_aliases() {
-  let aliases_file = join(webpack_dir, 'resolve.js');
-  if (existsSync(aliases_file)) {
-    let { alias } = require(aliases_file)(SRC_DIR);
-    for (let k in alias) {
-      if (existsSync(alias[k])) {
-        ALIASES[alias[k]] = k;
-      }
-    }
+  for (var k in webpack.alias) {
+    ALIASES[webpack.alias[k]] = k;
+    REV_ALIASES[k] = webpack.alias[k];
   }
 }
 
@@ -44,8 +38,9 @@ function build_aliases() {
  */
 function item(path) {
   const tpl_file = resolve(__dirname, 'promise.tpl');
-  let str = readFileSync(tpl_file, 'utf-8');
-  const renderer = template(String(str).trim().toString());
+  let c = readFileSync(tpl_file, 'utf-8');
+  let content = String(c).trim().toString();
+  const renderer = template(content);
   return renderer({ path });
 }
 
@@ -60,32 +55,44 @@ function fatal(a) {
 
 /**
  * 
- * @param {*} dirname 
- * @returns 
+ * @param [*] items 
  */
-async function collectSeeds(dirname) {
-  let items = [];
-
-  const walk = async (dir) => {
-    try {
-      const files = await readdir(dir);
-      for (const file of files) {
-        let realpath = resolve(dir, file);
-        let stat = statSync(realpath);
-        if (/seeds\.js$/.test(file)) {
-          items.push(realpath);
-        }
-        if (stat.isDirectory()) await walk(realpath);
-      }
-    } catch (err) {
-      console.trace();
-      console.error(err);
+function write_doc(items) {
+  let rows = []
+  let re = new RegExp(`^${SRC_DIR}`)
+  for (let r of items) {
+    let tail = r.path.split(/\/+/)
+    let head = tail.shift()
+    let item
+    if (REV_ALIASES[head]) {
+      item = REV_ALIASES[head]
+      item = item.replace(new RegExp(`/${head}$`), '')
+      item = resolve(item, r.path)
+      item = get_target(item)
+      if (!item) continue;
+    } else {
+      item = resolve(SRC_DIR, src_base, ...tail)
+      item = get_target(item)
     }
-  };
-  await walk(dirname);
-  return items;
+    r.local = `file://${item}`;
+    r.repo = item.replace(re, 'https://github.com/drumee/ui-team/tree/main');
+    rows.push(r)
+  }
+  let model = [
+    { h1: "Drumee builtins kins" },
+    { blockquote: "Automatic generation - DO NOT EDIT" },
+    { h2: "Core rendering engine" },
+    { p: "See https://drumee.com/-/#/sandbox for examples." },
+    { table: { headers: ["kind", "path", "repo"], rows } },
+  ]
+  const repo = resolve(SRC_DIR, 'docs', 'api', 'kind.md');
+  writeFileSync(repo, Json2md(model));
+  model[4].table.headers = ["kind", "path", "local"]
+  let local_docs = resolve(SRC_DIR, 'docs', 'local')
+  mkdirSync(local_docs, { recursive: true })
+  const loc = resolve(local_docs, 'kind.md');
+  writeFileSync(loc, Json2md(model));
 }
-
 
 /**
  * 
@@ -105,7 +112,7 @@ function optimize(items) {
           - Already declared in ${i.path} 
           - Shall be overloaded by ${f.path}\n`);
       } else {
-        console.log(`${i.kind} declared multiple times`)
+        if (args.verbose) console.log(`${i.kind} declared multiple times`)
       }
     }
   }
@@ -116,53 +123,71 @@ function optimize(items) {
  * 
  * @param {*} items 
  */
-function render(seeds_root, items) {
-  const tpl_file = resolve(__dirname, 'classes.tpl');
-  const dest_file = resolve(SRC_DIR, seeds_root, 'core/kind/seeds/builtins.js');
+function render(items, tpl, dest) {
+  const tpl_file = resolve(__dirname, tpl);
+  const dest_file = resolve(SRC_DIR, dest);
   if (!existsSync(tpl_file)) {
     fatal(`[Template not found]: ${tpl_file}`);
   }
-  let now = new Date;
   let data = {
     items: optimize(items),
     filename: dest_file.replace(SRC_DIR, ''),
-    year: now.getFullYear()
+    year: Moment().year()
   };
 
-  let tpl = readFileSync(tpl_file, 'utf-8');
-  let content = String(tpl).trim().toString();
+  let c = readFileSync(tpl_file, 'utf-8');
+  let content = String(c).trim().toString();
   const renderer = template(content);
   writeFileSync(dest_file, renderer(data), 'utf-8');
 }
 
-function debug(line, path) {
-  if (/modules\/desk/.test(path)) {
-    console.log(`LINE:${line}`, path)
+/**
+ * 
+ * @param {*} file 
+ * @param {*} path 
+ * @returns 
+ */
+function get_target(path) {
+  if (existsSync(path)) {
+    let item = statSync(path)
+    if (item.isDirectory()) {
+      for (let ext of webpack.extensions) {
+        let p = join(path, `index${ext}`)
+        if (existsSync(p)) return p;
+      }
+    }
+    return path;
+  };
+  for (let ext of webpack.extensions) {
+    let p = `${path}.${ext}`
+    if (existsSync(p)) return p;
   }
 }
+
+
 /**
  * 
  */
-async function make() {
+function make() {
   console.log("Compiling seeds from ....", SRC_DIR);
+  build_aliases();
+  let data = [];
+  let lex = [];
   let libs = [
-    "src/drumee",
+    src_base
   ];
   if (args.libs) {
     libs = args.libs.split(/[,;:]/);
   }
-  build_aliases();
-  //const walk = require('walkdir');
+  const walk = require('walkdir');
   for (let dir of libs) {
-    let data = [];
-    let root = new RegExp('^' + join(SRC_DIR, dir));
     let f = resolve(SRC_DIR, dir);
-    let files = await collectSeeds(f);
-    console.log("Scanning seeds from", f);
-    let parent;
+    console.log("Walking into", f);
+    let files = walk.sync(f);
+
     let v;
     for (let file of files) {
-      //debug(149, file)
+      if (!/(seeds.js)$/.test(file)) continue;
       if (existsSync(file)) {
         try {
           v = require(file);
@@ -173,45 +198,28 @@ async function make() {
         for (let kind in v) {
           let path = v[kind];
           if (!isString(path)) continue;
-          let basedir = './';
-          if (/^\./.test(path) || (!/^\//.test(path))) {
+          let basedir = null;
+          if (/^\./.test(path)) {
             basedir = resolve(dirname(file), path);
+          } else {
+            let [b, d] = path.split(/\/+/);
+            basedir = webpack.alias[b];
           }
           if (basedir && existsSync(basedir)) {
             if (ALIASES[basedir]) {
-              path = basedir
+              path = v[kind];
             } else {
-              parent = ALIASES[dirname(file)]
-              if (parent) {
-                path = join(parent, v[kind]);
-              }
-              else {
-                parent = dirname(file);
-                path = resolve(parent, v[kind]);
-                path = path.replace(SRC_DIR, '').replace(/^\//, '');
+              if (ALIASES[dirname(file)]) {
+                path = basedir.replace(dirname(file), ALIASES[dirname(file)]);
+              } else {
+                let r = resolve(dirname(file), v[kind]);
+                path = r.replace(SRC_DIR, '').replace(/^\//, '');
               }
             }
           } else {
-            parent = dirname(file)
-            path = resolve(parent, v[kind]);
-            let realpath
-            if (/\.js$/i.test(path)) {
-              realpath = path;
-            } else {
-              realpath = `${path}.js`
-            }
-            if (!existsSync(path) && !existsSync(realpath)) {
-              path = dirname(basedir);
-            }
-            realpath = `${path}.js`
-            if (!existsSync(path) && !existsSync(realpath)) {
-              path = v[kind];
-            }
+            path = basedir.replace(SRC_DIR, '').replace(/^\//, '');
           }
-
           path = path.replace(/\\+/g, '/');
-          path = path.replace(root, '');
-          path = path.replace(/^\/+/, '');
           data.push({
             kind,
             path,
@@ -219,16 +227,16 @@ async function make() {
           });
         }
       } else if (!isEmpty(file)) {
-        console.log(`ERROR : ${file} not found`);
+        console.warn(`${file} not found`);
       }
     }
-    render(dir, data);
   }
+  render(data, 'classes.tpl', `${src_base}/core/kind/seeds/builtins.js`);
+  render(data, 'helper.tpl', `${src_base}/core/kind/seeds/helper.js`);
+  write_doc(data)
   if (!isEmpty(not_found)) {
     console.warn("Following files have not been resolved", not_found);
   }
 }
 
-make().then(() => {
-  process.exit()
-});
+make();
