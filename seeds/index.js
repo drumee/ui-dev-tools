@@ -18,16 +18,16 @@ if (!SRC_DIR) {
   }
 }
 
-const webpack = require('../resolve')(SRC_DIR);
+const configs = require(join(SRC_DIR, 'webpack', 'resolve.js'))(SRC_DIR);
 let ALIASES = {};
 let REV_ALIASES = {};
 /**
  * 
  */
 function build_aliases() {
-  for (var k in webpack.alias) {
-    ALIASES[webpack.alias[k]] = k;
-    REV_ALIASES[k] = webpack.alias[k];
+  for (var k in configs.alias) {
+    ALIASES[configs.alias[k]] = k;
+    REV_ALIASES[k] = configs.alias[k];
   }
 }
 
@@ -151,14 +151,14 @@ function get_target(path) {
   if (existsSync(path)) {
     let item = statSync(path)
     if (item.isDirectory()) {
-      for (let ext of webpack.extensions) {
+      for (let ext of configs.extensions) {
         let p = join(path, `index${ext}`)
         if (existsSync(p)) return p;
       }
     }
     return path;
   };
-  for (let ext of webpack.extensions) {
+  for (let ext of configs.extensions) {
     let p = `${path}.${ext}`
     if (existsSync(p)) return p;
   }
@@ -203,7 +203,7 @@ function make() {
             basedir = resolve(dirname(file), path);
           } else {
             let [b, d] = path.split(/\/+/);
-            basedir = webpack.alias[b];
+            basedir = configs.alias[b];
           }
           if (basedir && existsSync(basedir)) {
             if (ALIASES[basedir]) {
