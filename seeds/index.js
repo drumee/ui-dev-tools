@@ -3,7 +3,6 @@
 const { readFileSync, statSync, mkdirSync, writeFileSync, existsSync } = require('fs');
 const { template, values, isString, isEmpty } = require('lodash');
 const { resolve, join, dirname } = require('path');
-const Moment = require('moment');
 const not_found = [];
 const Json2md = require('json2md');
 const args = require('./args')
@@ -132,7 +131,7 @@ function render(items, tpl, dest) {
   let data = {
     items: optimize(items),
     filename: dest_file.replace(SRC_DIR, ''),
-    year: Moment().year()
+    year: new Date().getFullYear()
   };
 
   let c = readFileSync(tpl_file, 'utf-8');
