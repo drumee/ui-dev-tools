@@ -78,7 +78,8 @@ fi
 if [ "$UI_BUILD_MODE" = "development" ]; then
   watch="--watch"
 fi
-  env_file=$rc_dir/deploy.sh
+
+env_file=$rc_dir/deploy.sh
 
 if [ -d $rc_dir/prepare ]; then
   for l in $(ls); do
@@ -88,12 +89,12 @@ if [ -d $rc_dir/prepare ]; then
   done
 fi
 
-if [ "$BUILD_SEEDS" != "no" ]; then
-  if [ "$SEEDS_ROOTS" != "" ]; then
-    $script_dir/../seeds/index.js --from=$UI_SRC_PATH --libs=$SEEDS_ROOTS
-  else
-    $script_dir/../seeds/index.js --from=$UI_SRC_PATH 
-  fi
-fi
+# if [ "$BUILD_SEEDS" != "no" ]; then
+#   if [ "$SEEDS_ROOTS" != "" ]; then
+#     $script_dir/../seeds/index.js --from=$UI_SRC_PATH --libs=$SEEDS_ROOTS
+#   else
+#     $script_dir/../seeds/index.js --from=$UI_SRC_PATH 
+#   fi
+# fi
 
 webpack --config webpack.js --mode=$UI_BUILD_MODE --progress $watch
