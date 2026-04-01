@@ -1,6 +1,6 @@
 /* ==================================================================== *
 * Widget style automatically generated on <%= date %>
-* npm run add-widget -- --fig=<grpup.family> --dest=/path/to/the/widget
+* npm run add-widget -- --fig=<%= group %>.<%= name %> --dest=<%= dest %>
 * ==================================================================== */
 @import 'mixins/drumee';
 

@@ -27,7 +27,7 @@ function fatal(a) {
 
 
 function render(target, tpl_file) {
-  if(!/\.tpl$/.test(tpl_file)){
+  if (!/\.tpl$/.test(tpl_file)) {
     return
   }
 
@@ -48,6 +48,7 @@ function render(target, tpl_file) {
     filename: dest_file.replace(resolve(__dirname, '..'), ''),
     parent: args.parent || 'LetcBox',
     service: "trigger-my-service",
+    dest: args.dest,
     date: new Date().toISOString()
   };
   let templateFile = readFileSync(tpl_file, 'utf-8');
@@ -98,7 +99,7 @@ function build(target) {
         let dest = resolve(target, f);
         mkdirSync(dest, RECURVISE);
       } else if (stat.isFile()) {
-        render(target, resolve(dir,f));
+        render(target, resolve(dir, f));
       }
     });
   }
