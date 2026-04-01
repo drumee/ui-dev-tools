@@ -91,7 +91,7 @@ function build(target) {
     resolve(tpl_base, 'skeleton'),
     resolve(tpl_base, 'skin')
   ];
-  for (var dir of folders) {
+  for (let dir of folders) {
     readdirSync(dir).forEach(function (f) {
       let full_path = resolve(dir, f);
       let stat = statSync(full_path);
