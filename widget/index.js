@@ -36,7 +36,6 @@ function render(target, tpl_file) {
   }
 
   let filename = tpl_file.replace(tpl_base, '').replace(/\.tpl$/, '')
-  console.log({filename, __dirname}, tpl_file);
   let dest_file = resolve(target, filename);
   let fig = args.fig.split(/[.-_\/]/);
   let group = fig.shift();
