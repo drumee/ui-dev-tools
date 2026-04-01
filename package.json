@@ -25,7 +25,6 @@
   },
   "homepage": "https://github.com/drumee/ui-dev-tools",
   "dependencies": {
-    "@drumee/ui-dev-tools": "^1.0.22",
     "argparse": "^2.0.1",
     "lodash": "^4.17.21"
   }
