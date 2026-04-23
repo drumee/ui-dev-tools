@@ -1,5 +1,5 @@
 const {
-  mkdirSync, existsSync, writeSync, openSync, close, readFileSync
+  mkdirSync, writeSync, openSync, close, readFileSync
 } = require("fs");
 const { env } = process;
 const { template, isEmpty } = require("lodash");
@@ -48,7 +48,6 @@ function write() {
       process.exit(1);
     }
   }
-  console.log("Writing config into " + filename);
   let fd = openSync(filename, "w+");
   writeSync(fd, render());
   close(fd, __error);
