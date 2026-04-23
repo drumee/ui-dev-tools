@@ -17,13 +17,18 @@ parser.add_argument("--user", {
 
 parser.add_argument("--endpoint", {
   type: String,
-  required: true,
+  default:  "main",
 });
 
 parser.add_argument("--type", {
   type: String,
   default:  "app",
   help: "app | plugin",
+});
+
+parser.add_argument("--runtime-dir", {
+  type: String,
+  default:  "/srv/drumee/runtime",
 });
 
 parser.add_argument("--plugin", {  
@@ -34,6 +39,11 @@ parser.add_argument("--plugin", {
 parser.add_argument("--output", {  
   type: String,
   default: "drumee_env",
+});
+
+parser.add_argument("--server", {  
+  type: String,
+  default: "",
 });
 
 parser.add_argument("--base-dir", {  
