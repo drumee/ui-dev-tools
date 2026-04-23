@@ -48,6 +48,7 @@ function write() {
       process.exit(1);
     }
   }
+  console.log(`Writing environment variables to ${filename}`);
   let fd = openSync(filename, "w+");
   writeSync(fd, render());
   close(fd, __error);
