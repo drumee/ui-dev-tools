@@ -9,16 +9,27 @@ echo "SOURCE DIR = $src_dir, script_dir = $script_dir"
 
 rc_dir=$src_dir/.dev-tools.rc
 export IGNORE_FILE=$rc_dir/ignored.txt
-if [[ "$worker" =~ deploy ]]; then
-  env_file=$rc_dir/deploy.sh
+target=$1
+if [ "$target" = "" ]; then
+  if [[ "$worker" =~ deploy ]]; then
+    target=deploy.sh
+  else
+    target=devel.sh
+  fi
 else
-  env_file=$rc_dir/devel.sh
+  if [[ "$target" =~ ^.+\.(sh|bash)$ ]]; then
+    target=$target
+  else
+    target=${target}.sh
+  fi
 fi
 
+env_file=$rc_dir/$target
+echo $env_file
 if [ -f $env_file ]; then
   source $env_file
 else
-  echo Warning: could not find resources file. Will use default settings
+  echo Warning: could not find resources file $env_file. Will use default settings
 fi
 
 
@@ -67,7 +78,8 @@ fi
 if [ "$UI_BUILD_MODE" = "development" ]; then
   watch="--watch"
 fi
-  env_file=$rc_dir/deploy.sh
+
+env_file=$rc_dir/deploy.sh
 
 if [ -d $rc_dir/prepare ]; then
   for l in $(ls); do
@@ -77,12 +89,12 @@ if [ -d $rc_dir/prepare ]; then
   done
 fi
 
-if [ "$BUILD_SEEDS" != "no" ]; then
-  if [ "$SEEDS_ROOTS" != "" ]; then
-    $script_dir/../seeds/index.js --from=$UI_SRC_PATH --libs=$SEEDS_ROOTS
-  else
-    $script_dir/../seeds/index.js --from=$UI_SRC_PATH 
-  fi
-fi
+# if [ "$BUILD_SEEDS" != "no" ]; then
+#   if [ "$SEEDS_ROOTS" != "" ]; then
+#     $script_dir/../seeds/index.js --from=$UI_SRC_PATH --libs=$SEEDS_ROOTS
+#   else
+#     $script_dir/../seeds/index.js --from=$UI_SRC_PATH 
+#   fi
+# fi
 
 webpack --config webpack.js --mode=$UI_BUILD_MODE --progress $watch

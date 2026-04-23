@@ -27,7 +27,7 @@ function fatal(a) {
 
 
 function render(target, tpl_file) {
-  if(!/\.tpl$/.test(tpl_file)){
+  if (!/\.tpl$/.test(tpl_file)) {
     return
   }
 
@@ -36,7 +36,6 @@ function render(target, tpl_file) {
   }
 
   let filename = tpl_file.replace(tpl_base, '').replace(/\.tpl$/, '')
-  console.log({filename, __dirname}, tpl_file);
   let dest_file = resolve(target, filename);
   let fig = args.fig.split(/[.-_\/]/);
   let group = fig.shift();
@@ -49,6 +48,7 @@ function render(target, tpl_file) {
     filename: dest_file.replace(resolve(__dirname, '..'), ''),
     parent: args.parent || 'LetcBox',
     service: "trigger-my-service",
+    dest: args.dest,
     date: new Date().toISOString()
   };
   let templateFile = readFileSync(tpl_file, 'utf-8');
@@ -91,7 +91,7 @@ function build(target) {
     resolve(tpl_base, 'skeleton'),
     resolve(tpl_base, 'skin')
   ];
-  for (var dir of folders) {
+  for (let dir of folders) {
     readdirSync(dir).forEach(function (f) {
       let full_path = resolve(dir, f);
       let stat = statSync(full_path);
@@ -99,7 +99,7 @@ function build(target) {
         let dest = resolve(target, f);
         mkdirSync(dest, RECURVISE);
       } else if (stat.isFile()) {
-        render(target, resolve(dir,f));
+        render(target, resolve(dir, f));
       }
     });
   }

@@ -1,8 +1,8 @@
 /* ==================================================================== *
 * Widget style automatically generated on <%= date %>
-* npm run add-widget -- --fig=<grpup.family> --dest=/path/to/the/widget
+* npm run add-widget -- --fig=<%= group %>.<%= name %> --dest=<%= dest %>
 * ==================================================================== */
-@import 'mixins/drumee';
+@use 'mixins/drumee';
 
 .<%= group %>-<%= name %>{
   &__ui{
@@ -25,7 +25,7 @@
   }
   &__text{
     border: none;
-    @include typo($color: #787B7F, $size: 14px, $line: 24px);
+    @include drumee.typo($color: var(--neutral-700), $size: 14px, $line: 24px);
   }
   &__icon{
     height:25px;
