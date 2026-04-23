@@ -4,6 +4,6 @@ export UI_RUNTIME_HOST=<%= server %>
 export BUILD_TARGET=<%= type %>
 export UI_RUNTIME_PATH=/srv/drumee/runtime/ui/$ENDPOINT
 export UI_BUILD_MODE=development
-export PUBLIC_PATH=/-/$ENDPOINT/$BUILD_TARGET
+export PUBLIC_PATH=/-/$ENDPOINT/$BUILD_TARGET/
 
 
