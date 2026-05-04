@@ -36,6 +36,11 @@ parser.add_argument("--plugin", {
   default: "",
 });
 
+parser.add_argument("--build-mode", {  
+  type: String,
+  default: "development",
+});
+
 parser.add_argument("--output", {  
   type: String,
   default: "drumee_env",

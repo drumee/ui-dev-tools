@@ -22,9 +22,6 @@ function __error(err) {
  */
 function render() {
   let tpl = resolve(__dirname, "templates", `${args.type}.tpl.sh`);
-  if (args.endpoint === 'main') {
-    tpl = resolve(__dirname, "templates", `main.tpl.sh`);
-  }
   let str = readFileSync(tpl);
   args.endpoint = args.endpoint || args.user;
   try {
@@ -42,9 +39,6 @@ function render() {
 function write() {
   let base_dir = resolve(args.base_dir, ".dev-tools.rc");
   let filename = resolve(base_dir, `${args.output}.sh`);
-  if (args.endpoint === 'main') {
-    filename = resolve(base_dir, `deploy.sh`);
-  }
   mkdirSync(base_dir, { recursive: true });
   if (args.type === "plugin") {
     if (isEmpty(args.plugin)) {
