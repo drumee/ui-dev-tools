@@ -79,6 +79,10 @@ if [ "$UI_BUILD_MODE" = "development" ]; then
   watch="--watch"
 fi
 
+if [ "$NO_WATCH" != "" ]; then
+  watch=""
+fi
+
 env_file=$rc_dir/deploy.sh
 
 if [ -d $rc_dir/prepare ]; then
