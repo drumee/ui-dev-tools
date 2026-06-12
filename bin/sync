@@ -11,8 +11,13 @@ if [ "$dest_host" != "" ]; then
   dest_path=$UI_RUNTIME_PATH
 
   OPT=""
+  
   if [ -f "$IGNORE_FILE" ]; then
     OPT=--exclude-from="$IGNORE_FILE"
+  fi
+
+  if [ "$BUILD_TARGET" != "" ]; then
+    src_path="$src_path/$BUILD_TARGET"
   fi
 
   if [ -z $src_path ]; then 
