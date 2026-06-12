@@ -8,5 +8,5 @@ export OUTPUT_FILENAME="[name]-[fullhash].js"
 <% if (endpoint==="main") { %>
 export PUBLIC_PATH=/-/plugins/$BUILD_TARGET/ 
 <% } else { %> 
-export PUBLIC_PATH=/-/<%= endpoint %>/plugins/$BUILD_TARGET 
+export PUBLIC_PATH=/-/<%= endpoint %>/plugins/$BUILD_TARGET/
 <% } %>
